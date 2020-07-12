@@ -1,12 +1,12 @@
 {
-    "name": "dicr/yii2-justin",
+    "name": "dicr/yii2-payparts",
     "type": "yii2-extension",
     "license": "MIT",
     "description": "Оплата частями от ПриватБанк для Yii2",
     "homepage": "https://gitlab.com/dicr/yii2-payparts",
     "keywords": ["dicr", "yii2", "privatbank", "payparts"],
     "support": {
-        "source": "https://gitlab.com/dicr/yii2-justin.git"
+        "source": "https://gitlab.com/dicr/yii2-payparts.git"
     },
     "authors": [
         {
