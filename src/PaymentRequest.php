@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 12.07.20 23:24:43
+ * @version 13.07.20 00:45:28
  */
 
 declare(strict_types = 1);
@@ -21,7 +21,6 @@ use function implode;
 use function is_array;
 use function sha1;
 use function sprintf;
-use function var_export;
 
 /**
  * Запрос создания платежа.
@@ -45,7 +44,7 @@ class PaymentRequest extends AbstractRequest
     public $partsCount;
 
     /** @var string тип кредита */
-    public $merchantType = PayPartsModule::MERCHANT_TYPE_PP;
+    public $merchantType = self::MERCHANT_TYPE_PP;
 
     /**
      * @var int|null идентификатор схемы (optional)
@@ -100,11 +99,10 @@ class PaymentRequest extends AbstractRequest
             ['products', 'validateProducts'],
 
             ['partsCount', 'required'],
-            ['partsCount', 'integer', 'min' => PayPartsModule::PARTS_COUNT_MIN,
-             'max' => PayPartsModule::PARTS_COUNT_MAX],
+            ['partsCount', 'integer', 'min' => self::PARTS_COUNT_MIN, 'max' => self::PARTS_COUNT_MAX],
 
             ['merchantType', 'required'],
-            ['merchantType', 'in', 'range' => array_keys(PayPartsModule::MERCHANT_TYPES)],
+            ['merchantType', 'in', 'range' => array_keys(self::MERCHANT_TYPES)],
 
             ['scheme', 'default'],
             ['scheme', 'integer'],
@@ -136,10 +134,9 @@ class PaymentRequest extends AbstractRequest
             unset($prod);
 
             // проверяем сумму товаров
-            if ($this->amount < PayPartsModule::AMOUNT_MIN || $this->amount > PayPartsModule::AMOUNT_MAX) {
-                $this->addError(
-                    $attribute,
-                    'Сумма товаров должна быть от ' . PayPartsModule::AMOUNT_MIN . ' до ' . PayPartsModule::AMOUNT_MAX
+            if ($this->amount < self::AMOUNT_MIN || $this->amount > self::AMOUNT_MAX) {
+                $this->addError($attribute,
+                    'Сумма товаров должна быть от ' . self::AMOUNT_MIN . ' до ' . self::AMOUNT_MAX
                 );
             }
         } else {
@@ -272,12 +269,12 @@ class PaymentRequest extends AbstractRequest
      */
     public function send()
     {
-        $json = $this->sendData($this->hold ? 'hold' : 'create', $this->json());
+        $response = $this->sendData($this->hold ? 'hold' : 'create', $this->json());
 
-        if (empty($json['token'])) {
-            throw new Exception('Не получен токен: ' . var_export($json, true));
+        if (empty($response->token)) {
+            throw new Exception('Не получен токен');
         }
 
-        return (string)$json['token'];
+        return $response->token;
     }
 }

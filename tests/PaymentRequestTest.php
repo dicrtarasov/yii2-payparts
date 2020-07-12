@@ -3,12 +3,13 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 12.07.20 23:24:02
+ * @version 13.07.20 00:48:04
  */
 
 declare(strict_types = 1);
 namespace dicr\tests;
 
+use dicr\payparts\PayParts;
 use dicr\payparts\PayPartsModule;
 use PHPUnit\Framework\TestCase;
 use Yii;
@@ -32,7 +33,7 @@ class PaymentRequestTest extends TestCase
         $request = $module->createPaymentRequest([
             'orderId' => (string)time(), // требуется постоянно новый
             'partsCount' => 2,
-            'merchantType' => PayPartsModule::MERCHANT_TYPE_PP,
+            'merchantType' => PayParts::MERCHANT_TYPE_PP,
             'products' => [
                 ['name' => 'Product', 'price' => 300.12, 'count' => 3],
             ],

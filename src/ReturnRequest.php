@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 12.07.20 23:22:14
+ * @version 13.07.20 00:46:43
  */
 
 declare(strict_types = 1);
@@ -42,7 +42,7 @@ class ReturnRequest extends AbstractRequest
             ['orderId', 'string', 'max' => 64],
 
             ['amount', 'required'],
-            ['amount', 'number', 'min' => PayPartsModule::AMOUNT_MIN, 'max' => PayPartsModule::AMOUNT_MAX],
+            ['amount', 'number', 'min' => self::AMOUNT_MIN, 'max' => self::AMOUNT_MAX],
             ['amount', 'filter', 'filter' => static function($amount) {
                 return (float)sprintf('%.2f', $amount);
             }],

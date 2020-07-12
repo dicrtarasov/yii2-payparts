@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 12.07.20 23:00:01
+ * @version 13.07.20 00:48:49
  */
 
 declare(strict_types = 1);
@@ -16,11 +16,13 @@ use yii\httpclient\Client;
 
 /**
  * Базовый класс для запросов.
+ *
+ * @property-read PayPartsModule $module
  */
-class AbstractRequest extends Model
+class AbstractRequest extends Model implements PayParts
 {
     /** @var PayPartsModule */
-    protected $module;
+    protected $_module;
 
     /**
      * AbstractRequest constructor.
@@ -34,9 +36,19 @@ class AbstractRequest extends Model
             throw new InvalidArgumentException('module');
         }
 
-        $this->module = $module;
+        $this->_module = $module;
 
         parent::__construct($config);
+    }
+
+    /**
+     * Возвращает модуль.
+     *
+     * @return PayPartsModule
+     */
+    public function getModule()
+    {
+        return $this->_module;
     }
 
     /**
@@ -44,7 +56,7 @@ class AbstractRequest extends Model
      *
      * @param string $func
      * @param array $data
-     * @return mixed
+     * @return Response
      * @throws Exception
      */
     protected function sendData(string $func, array $data)
@@ -61,16 +73,18 @@ class AbstractRequest extends Model
 
         // ответ
         $response->format = Client::FORMAT_JSON;
-        $json = $response->data;
-        if (empty($json)) {
+        $payPartsResponse = new Response();
+        $payPartsResponse->load($response->data, '');
+
+        if (! $payPartsResponse->validate()) {
             throw new Exception('Некорректный ответ: ' . $response->content);
         }
 
         // проверяем статус ответа
-        if (($json['state'] ?? '') !== PayPartsModule::STATE_SUCCESS) {
-            throw new Exception('Ошибка: ' . ($json['message'] ?? ''));
+        if ($payPartsResponse->state !== self::STATE_SUCCESS) {
+            throw new Exception('Ошибка: ' . $payPartsResponse->message);
         }
 
-        return $json;
+        return $payPartsResponse;
     }
 }
