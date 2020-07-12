@@ -3,18 +3,17 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 13.07.20 01:14:07
+ * @version 13.07.20 01:27:55
  */
 
 declare(strict_types = 1);
 namespace dicr\payparts;
 
-use dicr\helper\Url;
-use dicr\http\CachingClient;
 use Yii;
 use yii\base\ExitException;
 use yii\base\InvalidConfigException;
 use yii\base\Module;
+use yii\helpers\Url;
 use yii\httpclient\Client;
 use yii\web\Application;
 use yii\web\JsonParser;
@@ -59,7 +58,7 @@ class PayPartsModule extends Module implements PayParts
     /** @var array */
     public $httpClientConfig = [
         'baseUrl' => self::API_URL,
-        'class' => CachingClient::class,
+        'class' => Client::class,
         'requestConfig' => [
             'format' => Client::FORMAT_JSON,
             'headers' => [

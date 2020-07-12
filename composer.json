@@ -30,9 +30,9 @@
     "prefer-stable": true,
     "require": {
         "php": "~7.2",
-        "yiisoft/yii2": "~2.0",
         "ext-json": "*",
-        "dicr/yii2-http": "~2.1",
+        "yiisoft/yii2": "~2.0",
+        "yiisoft/yii2-httpclient": "~2.0",
         "dicr/yii2-validate": "~2.0"
     },
     "require-dev": {
@@ -40,7 +40,6 @@
         "phpunit/phpunit": "~9.2"
     },
     "repositories": [
-        {"type": "gitlab", "url": "https://gitlab.com/dicr/yii2-http.git"},
         {"type": "gitlab", "url": "https://gitlab.com/dicr/yii2-validate.git"},
         {"type": "composer", "url": "https://asset-packagist.org"}
     ]

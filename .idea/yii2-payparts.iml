@@ -12,13 +12,10 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/bower-asset/yii2-pjax" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/cebe/markdown" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/composer" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/dicr/yii2-helper" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/dicr/yii2-http" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/dicr/yii2-validate" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/doctrine/instantiator" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/ezyang/htmlpurifier" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/myclabs/deep-copy" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/npm-asset/bootstrap" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/phar-io/manifest" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/phar-io/version" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/phpdocumentor/reflection-common" />
@@ -45,14 +42,11 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/sebastian/resource-operations" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/sebastian/type" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/sebastian/version" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/simplehtmldom/simplehtmldom" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-ctype" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/theseer/tokenizer" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/webmozart/assert" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/yiisoft/yii2" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/yiisoft/yii2-bootstrap4" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/yiisoft/yii2-composer" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/yiisoft/yii2-httpclient" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

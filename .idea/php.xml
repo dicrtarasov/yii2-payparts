@@ -17,7 +17,6 @@
   </component>
   <component name="PhpIncludePathManager">
     <include_path>
-      <path value="$PROJECT_DIR$/vendor/simplehtmldom/simplehtmldom" />
       <path value="$PROJECT_DIR$/vendor/phpdocumentor/reflection-common" />
       <path value="$PROJECT_DIR$/vendor/phpdocumentor/reflection-docblock" />
       <path value="$PROJECT_DIR$/vendor/phpdocumentor/type-resolver" />
@@ -40,11 +39,8 @@
       <path value="$PROJECT_DIR$/vendor/sebastian/exporter" />
       <path value="$PROJECT_DIR$/vendor/sebastian/type" />
       <path value="$PROJECT_DIR$/vendor/sebastian/version" />
-      <path value="$PROJECT_DIR$/vendor/npm-asset/bootstrap" />
       <path value="$PROJECT_DIR$/vendor/doctrine/instantiator" />
-      <path value="$PROJECT_DIR$/vendor/yiisoft/yii2-httpclient" />
       <path value="$PROJECT_DIR$/vendor/yiisoft/yii2-composer" />
-      <path value="$PROJECT_DIR$/vendor/yiisoft/yii2-bootstrap4" />
       <path value="$PROJECT_DIR$/vendor/yiisoft/yii2" />
       <path value="$PROJECT_DIR$/vendor/theseer/tokenizer" />
       <path value="$PROJECT_DIR$/vendor/symfony/polyfill-ctype" />
@@ -60,10 +56,9 @@
       <path value="$PROJECT_DIR$/vendor/phar-io/version" />
       <path value="$PROJECT_DIR$/vendor/myclabs/deep-copy" />
       <path value="$PROJECT_DIR$/vendor/ezyang/htmlpurifier" />
-      <path value="$PROJECT_DIR$/vendor/dicr/yii2-http" />
-      <path value="$PROJECT_DIR$/vendor/dicr/yii2-helper" />
       <path value="$PROJECT_DIR$/vendor/dicr/yii2-validate" />
       <path value="$PROJECT_DIR$/vendor/cebe/markdown" />
+      <path value="$PROJECT_DIR$/vendor/yiisoft/yii2-httpclient" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="7.2" />
