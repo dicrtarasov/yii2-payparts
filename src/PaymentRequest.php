@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 13.07.20 00:45:28
+ * @version 13.07.20 01:51:34
  */
 
 declare(strict_types = 1);
@@ -122,16 +122,18 @@ class PaymentRequest extends AbstractRequest
         if (empty($this->{$attribute})) {
             $this->addError($attribute, 'Требуется указать список товаров');
         } elseif (is_array($this->{$attribute})) {
-            foreach ($this->{$attribute} as &$prod) {
+            $prods = [];
+
+            foreach ($this->{$attribute} as $prod) {
                 try {
-                    $prod = $this->validateProduct($prod);
+                    $prods[] = $this->validateProduct($prod);
                 } catch (Exception $ex) {
                     $this->addError($attribute, $ex->getMessage());
                     break;
                 }
             }
 
-            unset($prod);
+            $this->{$attribute} = $prods;
 
             // проверяем сумму товаров
             if ($this->amount < self::AMOUNT_MIN || $this->amount > self::AMOUNT_MAX) {

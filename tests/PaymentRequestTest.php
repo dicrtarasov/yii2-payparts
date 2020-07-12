@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 13.07.20 00:48:04
+ * @version 13.07.20 01:44:33
  */
 
 declare(strict_types = 1);
@@ -35,7 +35,7 @@ class PaymentRequestTest extends TestCase
             'partsCount' => 2,
             'merchantType' => PayParts::MERCHANT_TYPE_PP,
             'products' => [
-                ['name' => 'Product', 'price' => 300.12, 'count' => 3],
+                ['name' => 'Многофункциональный инструмент Metabo MT 400 QUICK', 'price' => 300.12, 'count' => 3],
             ],
             // URL не работают
             'responseUrl' => '',
