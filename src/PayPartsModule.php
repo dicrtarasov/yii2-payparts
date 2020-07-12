@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 13.07.20 00:43:45
+ * @version 13.07.20 01:14:07
  */
 
 declare(strict_types = 1);
@@ -12,6 +12,7 @@ namespace dicr\payparts;
 use dicr\helper\Url;
 use dicr\http\CachingClient;
 use Yii;
+use yii\base\ExitException;
 use yii\base\InvalidConfigException;
 use yii\base\Module;
 use yii\httpclient\Client;
@@ -20,6 +21,8 @@ use yii\web\JsonParser;
 use function array_merge;
 use function http_build_query;
 use function is_callable;
+use function ob_end_clean;
+use function ob_get_level;
 use function strlen;
 
 /**
@@ -178,5 +181,20 @@ class PayPartsModule extends Module implements PayParts
     public static function checkoutUrl(string $token)
     {
         return self::API_URL . '/payment?' . http_build_query(['token' => $token]);
+    }
+
+    /**
+     * Переадресует на страницу оплаты.
+     *
+     * @param string $token
+     * @throws ExitException
+     */
+    public static function redirectCheckout(string $token)
+    {
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        Yii::$app->end(0, Yii::$app->response->redirect(self::checkoutUrl($token)));
     }
 }
