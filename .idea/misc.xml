@@ -12,6 +12,12 @@
   <component name="JavaScriptSettings">
     <option name="languageLevel" value="ES6" />
   </component>
+  <component name="PhpEntryPointsManager">
+    <entry_point>
+      <entry_point TYPE="phpClass" FQNAME="\dicr\payparts\CallbackController" />
+    </entry_point>
+    <pattern value="\dicr\payparts\CallbackController" />
+  </component>
   <component name="SvnConfiguration">
     <configuration useDefault="false">$USER_HOME$/.subversion</configuration>
   </component>
