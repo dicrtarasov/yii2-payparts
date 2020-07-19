@@ -3,14 +3,14 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 13.07.20 01:44:33
+ * @version 19.07.20 04:55:11
  */
 
 declare(strict_types = 1);
 namespace dicr\tests;
 
-use dicr\payparts\PayParts;
-use dicr\payparts\PayPartsModule;
+use dicr\payparts\Payparts;
+use dicr\payparts\PaypartsModule;
 use PHPUnit\Framework\TestCase;
 use Yii;
 use yii\base\Exception;
@@ -27,13 +27,13 @@ class PaymentRequestTest extends TestCase
      */
     public function testSend()
     {
-        /** @var PayPartsModule $module */
+        /** @var PaypartsModule $module */
         $module = Yii::$app->getModule('payparts');
 
         $request = $module->createPaymentRequest([
             'orderId' => (string)time(), // требуется постоянно новый
             'partsCount' => 2,
-            'merchantType' => PayParts::MERCHANT_TYPE_PP,
+            'merchantType' => Payparts::MERCHANT_TYPE_PP,
             'products' => [
                 ['name' => 'Многофункциональный инструмент Metabo MT 400 QUICK', 'price' => 300.12, 'count' => 3],
             ],

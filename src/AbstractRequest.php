@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 13.07.20 00:48:49
+ * @version 19.07.20 05:05:00
  */
 
 declare(strict_types = 1);
@@ -17,22 +17,22 @@ use yii\httpclient\Client;
 /**
  * Базовый класс для запросов.
  *
- * @property-read PayPartsModule $module
+ * @property-read PaypartsModule $module
  */
-class AbstractRequest extends Model implements PayParts
+class AbstractRequest extends Model implements Payparts
 {
-    /** @var PayPartsModule */
+    /** @var PaypartsModule */
     protected $_module;
 
     /**
      * AbstractRequest constructor.
      *
-     * @param PayPartsModule $module
+     * @param PaypartsModule $module
      * @param array $config
      */
-    public function __construct(PayPartsModule $module, array $config = [])
+    public function __construct(PaypartsModule $module, array $config = [])
     {
-        if (! $module instanceof PayPartsModule) {
+        if (! $module instanceof PaypartsModule) {
             throw new InvalidArgumentException('module');
         }
 
@@ -44,7 +44,7 @@ class AbstractRequest extends Model implements PayParts
     /**
      * Возвращает модуль.
      *
-     * @return PayPartsModule
+     * @return PaypartsModule
      */
     public function getModule()
     {
@@ -56,7 +56,7 @@ class AbstractRequest extends Model implements PayParts
      *
      * @param string $func
      * @param array $data
-     * @return Response
+     * @return PaymentResponse
      * @throws Exception
      */
     protected function sendData(string $func, array $data)
@@ -64,16 +64,18 @@ class AbstractRequest extends Model implements PayParts
         // HTTP POST
         $request = $this->module->httpClient->post($func, $data);
         $request->format = Client::FORMAT_JSON;
+        $request->headers->set('Accept', 'application/json');
+        $request->headers->set('Accept-Encoding', 'UTF-8');
 
         // отправляем
         $response = $request->send();
+        $response->format = Client::FORMAT_JSON;
         if (! $response->isOk) {
             throw new Exception('Ошибка запроса: ' . $response->statusCode);
         }
 
         // ответ
-        $response->format = Client::FORMAT_JSON;
-        $payPartsResponse = new Response();
+        $payPartsResponse = new PaymentResponse();
         $payPartsResponse->load($response->data, '');
 
         if (! $payPartsResponse->validate()) {

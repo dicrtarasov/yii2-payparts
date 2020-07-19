@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 13.07.20 00:43:22
+ * @version 19.07.20 04:55:11
  */
 
 declare(strict_types = 1);
@@ -14,7 +14,7 @@ namespace dicr\payparts;
  *
  * @package dicr\payparts
  */
-interface PayParts
+interface Payparts
 {
     /** @var string адрес API */
     public const API_URL = 'https://payparts2.privatbank.ua/ipp/v2/payment';

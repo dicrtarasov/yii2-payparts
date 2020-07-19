@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 13.07.20 01:51:34
+ * @version 19.07.20 05:05:25
  */
 
 declare(strict_types = 1);
@@ -12,8 +12,9 @@ namespace dicr\payparts;
 use dicr\validate\ValidateException;
 use yii\base\DynamicModel;
 use yii\base\Exception;
-use yii\base\InvalidConfigException;
 use function array_filter;
+use function array_keys;
+use function array_map;
 use function array_reduce;
 use function base64_encode;
 use function gettype;
@@ -109,6 +110,7 @@ class PaymentRequest extends AbstractRequest
 
             [['recipientId', 'responseUrl', 'redirectUrl'], 'trim'],
             [['recipientId', 'responseUrl', 'redirectUrl'], 'default'],
+            [['responseUrl', 'redirectUrl'], 'url']
         ];
     }
 
@@ -122,18 +124,36 @@ class PaymentRequest extends AbstractRequest
         if (empty($this->{$attribute})) {
             $this->addError($attribute, 'Требуется указать список товаров');
         } elseif (is_array($this->{$attribute})) {
-            $prods = [];
+            $this->{$attribute} = array_map(function($prod) use ($attribute) {
+                if (is_array($prod)) {
+                    $model = DynamicModel::validateData($prod, [
+                        ['name', 'trim'],
+                        ['name', 'required'],
+                        ['name', 'string', 'max' => 128],
 
-            foreach ($this->{$attribute} as $prod) {
-                try {
-                    $prods[] = $this->validateProduct($prod);
-                } catch (Exception $ex) {
-                    $this->addError($attribute, $ex->getMessage());
-                    break;
+                        ['price', 'required'],
+                        ['price', 'number', 'min' => 0.01],
+                        ['price', 'filter', 'filter' => static function($price) {
+                            return (float)sprintf('%.2f', $price);
+                        }],
+
+                        ['count', 'required'],
+                        ['count', 'integer', 'min' => 1],
+                        ['count', 'filter', 'filter' => 'floatval']
+                    ]);
+
+                    if ($model->hasErrors()) {
+                        $errorAttr = array_keys($model->firstErrors)[0];
+                        $this->addError($attribute, $errorAttr . ': ' . $model->getFirstError($errorAttr));
+                    } else {
+                        $prod = $model->attributes;
+                    }
+                } else {
+                    $this->addError($attribute, 'Некорректный тип товара: ' . gettype($prod));
                 }
-            }
 
-            $this->{$attribute} = $prods;
+                return $prod;
+            }, $this->{$attribute});
 
             // проверяем сумму товаров
             if ($this->amount < self::AMOUNT_MIN || $this->amount > self::AMOUNT_MAX) {
@@ -144,49 +164,6 @@ class PaymentRequest extends AbstractRequest
         } else {
             $this->addError($attribute, 'Некорректный тип товаров: ' . gettype($this->{$attribute}));
         }
-    }
-
-    /**
-     * Проверка данных товара.
-     *
-     * @param mixed $prod
-     * @return array данные товара после проверки
-     * @throws Exception
-     * @throws InvalidConfigException
-     */
-    public function validateProduct($prod)
-    {
-        if (empty($prod)) {
-            throw new Exception('Пустой товар');
-        }
-
-        if (! is_array($prod)) {
-            throw new Exception('Некорректный тип товара: ' . gettype($prod));
-        }
-
-        $model = DynamicModel::validateData($prod, [
-            ['name', 'trim'],
-            ['name', 'required'],
-            ['name', 'string', 'max' => 128],
-
-            ['price', 'required'],
-            ['price', 'number', 'min' => 0.01],
-            ['price', 'filter', 'filter' => static function($price) {
-                return (float)sprintf('%.2f', $price);
-            }],
-
-            ['count', 'required'],
-            ['count', 'integer', 'min' => 1],
-            ['count', 'filter', 'filter' => 'floatval']
-        ]);
-
-        if ($model->hasErrors()) {
-            $errorAttr = array_keys($model->firstErrors)[0];
-
-            throw new Exception($errorAttr . ': ' . $model->getFirstError($errorAttr));
-        }
-
-        return $model->attributes;
     }
 
     /** @var float */

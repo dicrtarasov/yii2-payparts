@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 13.07.20 00:46:31
+ * @version 19.07.20 04:55:11
  */
 
 declare(strict_types = 1);
@@ -14,7 +14,7 @@ use yii\base\Model;
 /**
  * Ответ на запрос.
  */
-class Response extends Model implements PayParts
+class PaymentResponse extends Model implements Payparts
 {
     /** @var string статус ответа на запрос */
     public $state;
@@ -43,23 +43,8 @@ class Response extends Model implements PayParts
     public function rules()
     {
         return [
-            ['state', 'trim'],
-            ['state', 'in', 'range' => [self::STATE_SUCCESS, self::STATE_FAIL]],
-
-            ['paymentState', 'trim'],
-            ['paymentState', 'in', 'range' => array_keys(self::STATES)],
-
-            ['storeId', 'trim'],
-
-            ['orderId', 'trim'],
-            ['orderId', 'required'],
-
-            ['token', 'trim'],
-
-            ['message', 'trim'],
-
-            ['signature', 'trim'],
-            ['signature', 'required'],
+            [['state', 'paymentState', 'storeId', 'orderId', 'token', 'message', 'signature'], 'trim'],
+            ['signature', 'required']
         ];
     }
 }

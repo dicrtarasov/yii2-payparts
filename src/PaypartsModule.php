@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 13.07.20 01:27:55
+ * @version 19.07.20 04:55:11
  */
 
 declare(strict_types = 1);
@@ -44,7 +44,7 @@ use function strlen;
  * @link https://payparts2.privatbank.ua личный кабинет
  * @link https://bw.gitbooks.io/api-oc/content/testdata.html тестовые данные
  */
-class PayPartsModule extends Module implements PayParts
+class PaypartsModule extends Module implements Payparts
 {
     /** @var string идентификатор магазина */
     public $storeId;
@@ -56,18 +56,7 @@ class PayPartsModule extends Module implements PayParts
     public $paymentRequestConfig = [];
 
     /** @var array */
-    public $httpClientConfig = [
-        'baseUrl' => self::API_URL,
-        'class' => Client::class,
-        'requestConfig' => [
-            'format' => Client::FORMAT_JSON,
-            'headers' => [
-                // требуется наличие в запросе по документации
-                'Accept' => 'application/json',
-                'Accept-Encoding' => 'UTF-8',
-            ]
-        ]
-    ];
+    public $httpClientConfig = [];
 
     /** @var callable|null function(\dicr\payparts\Response $response) обработчик успешных платежей */
     public $callbackHandler;
@@ -78,13 +67,6 @@ class PayPartsModule extends Module implements PayParts
      */
     public function init()
     {
-        $this->controllerNamespace = 'dicr\\payparts';
-
-        // для разбора raw http json запросов от ПриватБанк
-        if (Yii::$app instanceof Application) {
-            Yii::$app->request->parsers['application/json'] = JsonParser::class;
-        }
-
         parent::init();
 
         $this->storeId = trim((string)$this->storeId);
@@ -97,17 +79,25 @@ class PayPartsModule extends Module implements PayParts
             throw new InvalidConfigException('password');
         }
 
+        if (! empty($this->callbackHandler) && ! is_callable($this->callbackHandler)) {
+            throw new InvalidConfigException('callbackHandler');
+        }
+
+        // для разбора raw http json запросов от ПриватБанк
         if (Yii::$app instanceof Application) {
+            $this->controllerNamespace = __NAMESPACE__;
+
+            Yii::$app->request->parsers['application/json'] = JsonParser::class;
+
             $this->paymentRequestConfig = array_merge([
                 'responseUrl' => Url::to(['/' . $this->uniqueId . '/callback'], true),
                 'redirectUrl' => Url::to(Yii::$app->homeUrl, true),
             ], $this->paymentRequestConfig ?: []);
         }
-
-        if (! empty($this->callbackHandler) && ! is_callable($this->callbackHandler)) {
-            throw new InvalidConfigException('callbackHandler');
-        }
     }
+
+    /** @var Client */
+    private $_httpClient;
 
     /**
      * Возвращает HTTP-клиент.
@@ -117,14 +107,14 @@ class PayPartsModule extends Module implements PayParts
      */
     public function getHttpClient()
     {
-        /** @var Client $client */
-        static $client;
-
-        if (! isset($client)) {
-            $client = Yii::createObject($this->httpClientConfig);
+        if (! isset($this->_httpClient)) {
+            $this->_httpClient = Yii::createObject(array_merge([
+                'class' => Client::class,
+                'baseUrl' => self::API_URL
+            ], $this->httpClientConfig ?: []));
         }
 
-        return $client;
+        return $this->_httpClient;
     }
 
     /**

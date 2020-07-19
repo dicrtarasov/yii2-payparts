@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 13.07.20 00:47:25
+ * @version 19.07.20 04:55:11
  */
 
 declare(strict_types = 1);
@@ -19,9 +19,9 @@ use function sha1;
 /**
  * Контроллер обработки ответов от ПриватБанк.
  *
- * @property-read PayPartsModule $module
+ * @property-read PaypartsModule $module
  */
-class CallbackController extends Controller implements PayParts
+class CallbackController extends Controller implements Payparts
 {
     /**
      * @inheritDoc
@@ -38,8 +38,8 @@ class CallbackController extends Controller implements PayParts
     public function actionIndex()
     {
         // получаем распарсенные данные JSON
-        $response = new Response();
-        $response->load(Yii::$app->request->rawBody, '');
+        $response = new PaymentResponse();
+        $response->load(Yii::$app->request->bodyParams, '');
 
         // проверяем наличие всех необходимых полей
         if (! $response->validate()) {
@@ -62,7 +62,7 @@ class CallbackController extends Controller implements PayParts
             throw new BadRequestHttpException('Некорректная сигнатура');
         }
 
-        Yii::info(
+        Yii::debug(
             'Статус платежа заказ №' . $response->orderId . ': ' . self::STATES[$response->paymentState],
             __METHOD__
         );

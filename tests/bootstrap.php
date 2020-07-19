@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 13.07.20 00:48:20
+ * @version 19.07.20 04:55:11
  */
 
 declare(strict_types = 1);
@@ -23,9 +23,9 @@ new yii\console\Application([
     ],
     'modules' => [
         'payparts' => [
-            'class' => dicr\payparts\PayPartsModule::class,
-            'storeId' => dicr\payparts\PayParts::TEST_STORE_ID,
-            'password' => dicr\payparts\PayParts::TEST_PASSWORD,
+            'class' => dicr\payparts\PaypartsModule::class,
+            'storeId' => dicr\payparts\Payparts::TEST_STORE_ID,
+            'password' => dicr\payparts\Payparts::TEST_PASSWORD,
         ]
     ]
 ]);
