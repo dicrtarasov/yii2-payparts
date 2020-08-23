@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 23.08.20 18:19:59
+ * @version 24.08.20 01:43:45
  */
 
 declare(strict_types = 1);
@@ -115,7 +115,6 @@ class QrRequest extends Model implements PayParts
         $request = $this->_module->httpClient->get(self::QR_URL, $data, [
             'Accept' => 'application/json',
             'Accept-Encoding' => 'UTF-8',
-            'Content-Type' => 'application/json; charset=UTF-8'
         ]);
 
         Yii::debug('Запрос на генерацию QR: ' . $request->toString());
