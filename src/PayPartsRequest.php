@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 23.08.20 20:03:20
+ * @version 24.08.20 01:40:45
  */
 
 declare(strict_types = 1);
@@ -68,11 +68,21 @@ abstract class PayPartsRequest extends Model implements PayParts
     }
 
     /**
-     * Функция API.
+     * URL
      *
      * @return string
      */
-    abstract protected function func(): string;
+    abstract protected function url(): string;
+
+    /**
+     * Метод HTTP-запроса.
+     *
+     * @return string
+     */
+    protected function method(): string
+    {
+        return 'post';
+    }
 
     /**
      * Данные для JSON.
@@ -124,13 +134,16 @@ abstract class PayPartsRequest extends Model implements PayParts
         $data['signature'] = $this->signature();
 
         // HTTP POST
-        $request = $this->_module->httpClient->post($this->func(), $data, [
-            'Accept' => 'application/json',
-            'Accept-Encoding' => 'UTF-8',
-            'Content-Type' => 'application/json; charset=UTF-8'
-        ]);
-
-        $request->format = Client::FORMAT_JSON;
+        $request = $this->_module->httpClient->createRequest()
+            ->setUrl($this->url())
+            ->setMethod($this->method())
+            ->setHeaders([
+                'Content-Type' => 'application/json;charset=UTF-8',
+                'Accept' => 'application/json',
+                'Accept-Encoding' => 'UTF-8'
+            ])
+            ->setData($data)
+            ->setFormat(Client::FORMAT_JSON);
 
         // отправляем
         $response = $request->send();
