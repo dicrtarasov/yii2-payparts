@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 19.07.20 04:55:11
+ * @version 23.08.20 18:08:12
  */
 
 declare(strict_types = 1);
@@ -11,13 +11,14 @@ namespace dicr\payparts;
 
 /**
  * Константы PayParts
- *
- * @package dicr\payparts
  */
-interface Payparts
+interface PayParts
 {
     /** @var string адрес API */
-    public const API_URL = 'https://payparts2.privatbank.ua/ipp/v2/payment';
+    public const API_URL = 'https://payparts2.privatbank.ua/ipp/v2';
+
+    /** @var string URL для генерации QrCode */
+    public const QR_URL = 'https://payparts2.privatbank.ua/ipp/qr/generate';
 
     /** @var string Мгновенная рассрочка */
     public const MERCHANT_TYPE_II = 'II';

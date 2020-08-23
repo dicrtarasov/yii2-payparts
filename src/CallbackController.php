@@ -1,33 +1,29 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 19.07.20 04:55:11
+ * @version 23.08.20 15:35:13
  */
 
 declare(strict_types = 1);
 namespace dicr\payparts;
 
+use dicr\validate\ValidateException;
 use Yii;
 use yii\web\BadRequestHttpException;
 use yii\web\Controller;
-use function base64_encode;
+
 use function call_user_func;
-use function sha1;
 
 /**
  * Контроллер обработки ответов от ПриватБанк.
  *
- * @property-read PaypartsModule $module
+ * @property-read PayPartsModule $module
  */
-class CallbackController extends Controller implements Payparts
+class CallbackController extends Controller implements PayParts
 {
-    /**
-     * @inheritDoc
-     *
-     * Отключаем проверку CSRF для запросов ПриватБанк.
-     */
+    /** @inheritDoc */
     public $enableCsrfValidation = false;
 
     /**
@@ -37,35 +33,17 @@ class CallbackController extends Controller implements Payparts
      */
     public function actionIndex()
     {
+        Yii::debug('Оповещение PayParts: ' . Yii::$app->request->rawBody, __METHOD__);
+
         // получаем распарсенные данные JSON
-        $response = new PaymentResponse();
-        $response->load(Yii::$app->request->bodyParams, '');
+        $response = new PayPartsResponse($this->module, Yii::$app->request->bodyParams);
 
         // проверяем наличие всех необходимых полей
         if (! $response->validate()) {
-            throw new BadRequestHttpException('Некорректные данные json');
+            throw new BadRequestHttpException('Некорректные данные запроса: ' . Yii::$app->request->rawBody,
+                0, new ValidateException($response)
+            );
         }
-
-        // проверяем правильность магазина
-        if ($response->storeId !== $this->module->storeId) {
-            throw new BadRequestHttpException('Неверный storeId');
-        }
-
-        // рассчитываем сигнатуру расчет
-        $signature = base64_encode(sha1(
-            $this->module->password . $response->storeId . $response->orderId . $response->paymentState .
-            $response->message . $this->module->password, true
-        ));
-
-        // проверяем сигнатуру
-        if ($response->signature !== $signature) {
-            throw new BadRequestHttpException('Некорректная сигнатура');
-        }
-
-        Yii::debug(
-            'Статус платежа заказ №' . $response->orderId . ': ' . self::STATES[$response->paymentState],
-            __METHOD__
-        );
 
         if (! empty($this->module->callbackHandler)) {
             call_user_func($this->module->callbackHandler, $response);

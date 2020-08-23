@@ -1,27 +1,30 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 19.07.20 04:55:11
+ * @version 23.08.20 18:42:03
  */
 
 declare(strict_types = 1);
 namespace dicr\payparts;
 
+use dicr\payparts\request\CancelRequest;
+use dicr\payparts\request\ConfirmRequest;
+use dicr\payparts\request\DeclineRequest;
+use dicr\payparts\request\PaymentRequest;
+use dicr\payparts\request\QrRequest;
+use dicr\payparts\request\StateRequest;
 use Yii;
-use yii\base\ExitException;
 use yii\base\InvalidConfigException;
 use yii\base\Module;
 use yii\helpers\Url;
 use yii\httpclient\Client;
 use yii\web\Application;
 use yii\web\JsonParser;
+
 use function array_merge;
-use function http_build_query;
 use function is_callable;
-use function ob_end_clean;
-use function ob_get_level;
 use function strlen;
 
 /**
@@ -39,27 +42,33 @@ use function strlen;
  *
  * @property-read Client $httpClient
  *
- * @api https://api.privatbank.ua/#p24/partPaymentApi
  * @api https://bw.gitbooks.io/api-oc/content/
+ * @api https://api.privatbank.ua/#p24/partPaymentApi
  * @link https://payparts2.privatbank.ua личный кабинет
  * @link https://bw.gitbooks.io/api-oc/content/testdata.html тестовые данные
  */
-class PaypartsModule extends Module implements Payparts
+class PayPartsModule extends Module implements PayParts
 {
+    /** @var string URL API */
+    public $url = self::API_URL;
+
     /** @var string идентификатор магазина */
     public $storeId;
 
     /** @var string пароль */
     public $password;
 
-    /** @var array конфиг по-умолчанию для запросов создания платежа */
-    public $paymentRequestConfig = [];
-
     /** @var array */
     public $httpClientConfig = [];
 
-    /** @var callable|null function(\dicr\payparts\Response $response) обработчик успешных платежей */
+    /** @var ?callable function(PayPartsResponse $response) обработчик callback-запросов от банка со статусами платежа */
     public $callbackHandler;
+
+    /** @var array конфиг по-умолчанию для запросов создания платежа */
+    public $paymentRequestConfig = [];
+
+    /** @inheritDoc */
+    public $controllerNamespace = __NAMESPACE__;
 
     /**
      * @inheritDoc
@@ -68,6 +77,10 @@ class PaypartsModule extends Module implements Payparts
     public function init()
     {
         parent::init();
+
+        if (empty($this->url)) {
+            throw new InvalidConfigException('url');
+        }
 
         $this->storeId = trim((string)$this->storeId);
         if (empty($this->storeId) || strlen($this->storeId) > 20) {
@@ -85,8 +98,6 @@ class PaypartsModule extends Module implements Payparts
 
         // для разбора raw http json запросов от ПриватБанк
         if (Yii::$app instanceof Application) {
-            $this->controllerNamespace = __NAMESPACE__;
-
             Yii::$app->request->parsers['application/json'] = JsonParser::class;
 
             $this->paymentRequestConfig = array_merge([
@@ -94,6 +105,12 @@ class PaypartsModule extends Module implements Payparts
                 'redirectUrl' => Url::to(Yii::$app->homeUrl, true),
             ], $this->paymentRequestConfig ?: []);
         }
+
+        // адреса по-умолчанию
+        $this->paymentRequestConfig = array_merge([
+            'responseUrl' => Url::to('/' . $this->uniqueId . '/callback', true),
+            'redirectUrl' => Url::to('/', true),
+        ], $this->paymentRequestConfig ?: []);
     }
 
     /** @var Client */
@@ -110,7 +127,7 @@ class PaypartsModule extends Module implements Payparts
         if (! isset($this->_httpClient)) {
             $this->_httpClient = Yii::createObject(array_merge([
                 'class' => Client::class,
-                'baseUrl' => self::API_URL
+                'baseUrl' => $this->url,
             ], $this->httpClientConfig ?: []));
         }
 
@@ -118,14 +135,31 @@ class PaypartsModule extends Module implements Payparts
     }
 
     /**
+     * Создает запрос.
+     *
+     * @param array $config
+     * @return PayPartsRequest
+     * @throws InvalidConfigException
+     */
+    public function createRequest(array $config)
+    {
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return Yii::createObject($config, [$this]);
+    }
+
+    /**
      * Создает запрос на создание платежа.
      *
      * @param array $config
      * @return PaymentRequest
+     * @throws InvalidConfigException
      */
-    public function createPaymentRequest(array $config = [])
+    public function createPaymentRequest(array $config = []): PaymentRequest
     {
-        return new PaymentRequest($this, array_merge($this->paymentRequestConfig, $config));
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return $this->createRequest(array_merge([
+            'class' => PaymentRequest::class
+        ], $this->paymentRequestConfig ?: [], $config));
     }
 
     /**
@@ -133,10 +167,14 @@ class PaypartsModule extends Module implements Payparts
      *
      * @param array $config
      * @return ConfirmRequest
+     * @throws InvalidConfigException
      */
-    public function createConfirmRequest(array $config = [])
+    public function createConfirmRequest(array $config = []): ConfirmRequest
     {
-        return new ConfirmRequest($this, $config);
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return $this->createRequest(array_merge([
+            'class' => ConfirmRequest::class
+        ], $config));
     }
 
     /**
@@ -144,46 +182,58 @@ class PaypartsModule extends Module implements Payparts
      *
      * @param array $config
      * @return CancelRequest
+     * @throws InvalidConfigException
      */
-    public function createCancelRequest(array $config = [])
+    public function createCancelRequest(array $config = []): CancelRequest
     {
-        return new CancelRequest($this, $config);
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return $this->createRequest(array_merge([
+            'class' => CancelRequest::class
+        ], $config));
     }
 
     /**
      * Создает запрос на возврат выполненного платежа.
      *
      * @param array $config
-     * @return ReturnRequest
+     * @return DeclineRequest
+     * @throws InvalidConfigException
      */
-    public function createReturnRequest(array $config = [])
+    public function createDeclineRequest(array $config = []): DeclineRequest
     {
-        return new ReturnRequest($this, $config);
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return $this->createRequest(array_merge([
+            'class' => DeclineRequest::class
+        ], $config));
     }
 
     /**
-     * Адрес страницы переадресации покупателя для оплаты.
+     * Создает запрос на проверку статуса платежа.
      *
-     * @param string $token токен платежа, полученный в запросе создания платежа.
-     * @return string
+     * @param array $config
+     * @return StateRequest
+     * @throws InvalidConfigException
      */
-    public static function checkoutUrl(string $token)
+    public function createStateRequest(array $config = []): StateRequest
     {
-        return self::API_URL . '/payment?' . http_build_query(['token' => $token]);
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return $this->createRequest(array_merge([
+            'class' => StateRequest::class
+        ], $config));
     }
 
     /**
-     * Переадресует на страницу оплаты.
+     * Создает запрос создания QrCode.
      *
-     * @param string $token
-     * @throws ExitException
+     * @param array $config
+     * @return QrRequest
+     * @throws InvalidConfigException
      */
-    public static function redirectCheckout(string $token)
+    public function createQrRequest(array $config = []): QrRequest
     {
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-
-        Yii::$app->end(0, Yii::$app->response->redirect(self::checkoutUrl($token)));
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return $this->createRequest(array_merge([
+            'class' => QrRequest::class
+        ], $config));
     }
 }
