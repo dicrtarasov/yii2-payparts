@@ -12,15 +12,17 @@
 В конфиге приложения настраиваем модуль оплаты частями. Основные настройки - это `storeId` и `password`.
 
 ```php
-'modules' => [
-    'payparts' => [
-        'class' => dicr\payparts\PayPartsModule::class,
-        'storeId' => '* мой storeId *',
-        'password' => '* мой password *',
-        // обработчик состояний платежей (опционально)
-        'callbackHandler' => static function(PayPartsResponse $response) {
-            Order::setPayed($response->orderId);
-        }
+[
+    'modules' => [
+        'payparts' => [
+            'class' => dicr\payparts\PayPartsModule::class,
+            'storeId' => '* мой storeId *',
+            'password' => '* мой password *',
+            // обработчик состояний платежей (опционально)
+            'callbackHandler' => static function(dicr\payparts\PayPartsResponse $response) {
+                Order::setPayed($response->orderId);
+            }
+        ]
     ]
 ];
 ```
