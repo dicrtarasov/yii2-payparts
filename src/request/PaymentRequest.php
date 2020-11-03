@@ -3,25 +3,24 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 24.08.20 01:37:45
+ * @version 03.11.20 23:32:15
  */
 
 declare(strict_types = 1);
 namespace dicr\payparts\request;
 
+use dicr\json\EntityValidator;
 use dicr\payparts\PayPartsRequest;
 use dicr\payparts\PayPartsResponse;
 use dicr\payparts\Product;
-use dicr\validate\ValidateException;
 use yii\base\Exception;
 use yii\helpers\Json;
 
 use function array_keys;
-use function array_map;
+use function array_merge;
 use function array_reduce;
 use function base64_encode;
 use function implode;
-use function is_array;
 use function sha1;
 use function sprintf;
 use function str_replace;
@@ -94,7 +93,15 @@ class PaymentRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    public function rules()
+    public function attributes() : array
+    {
+        return array_merge(parent::attributes(), ['amount']);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function rules() : array
     {
         return array_merge(parent::rules(), [
             ['partsCount', 'required'],
@@ -106,22 +113,10 @@ class PaymentRequest extends PayPartsRequest
 
             ['scheme', 'default'],
             ['scheme', 'integer', 'min' => 0],
-            ['scheme', 'filter', 'filter' => 'intval'],
+            ['scheme', 'filter', 'filter' => 'intval', 'skipOnEmpty' => true],
 
             ['products', 'required'],
-            ['products', function (string $attribute) {
-                if (is_array($this->products)) {
-                    foreach ($this->products as $prod) {
-                        if (! $prod instanceof Product) {
-                            $this->addError($attribute, 'Товар должен иметь тип Product');
-                        } elseif (! $prod->validate()) {
-                            $this->addError($attribute, (new ValidateException($prod))->getMessage());
-                        }
-                    }
-                } else {
-                    $this->addError($attribute, 'Товары должны быть массивом');
-                }
-            }],
+            ['products', EntityValidator::class, 'class' => Product::class],
 
             // проверяем сумму товаров после проверки самих товаров
             ['amount', 'number', 'min' => self::AMOUNT_MIN, 'max' => self::AMOUNT_MAX],
@@ -139,6 +134,26 @@ class PaymentRequest extends PayPartsRequest
         ]);
     }
 
+    /**
+     * @inheritDoc
+     */
+    public function attributeEntities() : array
+    {
+        return array_merge(parent::attributeEntities(), [
+            'products' => [Product::class]
+        ]);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function attributesToJson() : array
+    {
+        return array_merge(parent::attributesToJson(), [
+            'hold' => ''
+        ]);
+    }
+
     /** @var float */
     private $_amount;
 
@@ -147,16 +162,19 @@ class PaymentRequest extends PayPartsRequest
      *
      * @return float
      */
-    public function getAmount(): float
+    public function getAmount() : float
     {
+        // не инициализируем _amount, если товары еще не заданы
         if (empty($this->products)) {
             return 0;
         }
 
         if (! isset($this->_amount)) {
-            $this->_amount = array_reduce($this->products, static function (float $amount, Product $prod) {
-                return $amount + $prod->sum;
-            }, 0);
+            $this->_amount = 0;
+
+            foreach ($this->products as $prod) {
+                $this->_amount += $prod->sum;
+            }
         }
 
         return $this->_amount;
@@ -165,7 +183,7 @@ class PaymentRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    protected function url(): string
+    protected function url() : string
     {
         return 'payment/' . ($this->hold ? 'hold' : 'create');
     }
@@ -173,46 +191,29 @@ class PaymentRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    protected function data(): array
-    {
-        return array_merge(parent::data(), [
-            'amount' => sprintf('%.2f', $this->amount),
-            'partsCount' => $this->partsCount,
-            'merchantType' => $this->merchantType,
-            'responseUrl' => $this->responseUrl,
-            'redirectUrl' => $this->redirectUrl,
-            'products' => array_map(static function (Product $prod) {
-                return $prod->data;
-            }, $this->products),
-        ]);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function signature(): string
+    protected function signature() : string
     {
         return base64_encode(sha1(implode('', [
-            $this->_module->password,
-            $this->_module->storeId,
+            $this->module->password,
+            $this->module->storeId,
             $this->orderId,
             str_replace('.', '', sprintf('%.2f', $this->amount)),
             $this->partsCount,
             $this->merchantType,
             $this->responseUrl,
             $this->redirectUrl,
-            array_reduce($this->products, static function (string $s, Product $prod) {
+            array_reduce($this->products, static function (string $s, Product $prod) : string {
                 return $s . $prod->name . $prod->count .
                     str_replace('.', '', sprintf('%.2f', $prod->price));
             }, ''),
-            $this->_module->password
+            $this->module->password
         ]), true));
     }
 
     /**
      * @inheritDoc
      */
-    public function send(): PayPartsResponse
+    public function send() : PayPartsResponse
     {
         $response = parent::send();
 

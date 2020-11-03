@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 23.08.20 18:42:03
+ * @version 03.11.20 23:07:52
  */
 
 declare(strict_types = 1);
@@ -58,9 +58,6 @@ class PayPartsModule extends Module implements PayParts
     /** @var string пароль */
     public $password;
 
-    /** @var array */
-    public $httpClientConfig = [];
-
     /** @var ?callable function(PayPartsResponse $response) обработчик callback-запросов от банка со статусами платежа */
     public $callbackHandler;
 
@@ -74,7 +71,7 @@ class PayPartsModule extends Module implements PayParts
      * @inheritDoc
      * @throws InvalidConfigException
      */
-    public function init()
+    public function init() : void
     {
         parent::init();
 
@@ -99,18 +96,7 @@ class PayPartsModule extends Module implements PayParts
         // для разбора raw http json запросов от ПриватБанк
         if (Yii::$app instanceof Application) {
             Yii::$app->request->parsers['application/json'] = JsonParser::class;
-
-            $this->paymentRequestConfig = array_merge([
-                'responseUrl' => Url::to(['/' . $this->uniqueId . '/callback'], true),
-                'redirectUrl' => Url::to(Yii::$app->homeUrl, true),
-            ], $this->paymentRequestConfig ?: []);
         }
-
-        // адреса по-умолчанию
-        $this->paymentRequestConfig = array_merge([
-            'responseUrl' => Url::to('/' . $this->uniqueId . '/callback', true),
-            'redirectUrl' => Url::to('/', true),
-        ], $this->paymentRequestConfig ?: []);
     }
 
     /** @var Client */
@@ -120,31 +106,16 @@ class PayPartsModule extends Module implements PayParts
      * Возвращает HTTP-клиент.
      *
      * @return Client
-     * @throws InvalidConfigException
      */
-    public function getHttpClient()
+    public function getHttpClient() : Client
     {
-        if (! isset($this->_httpClient)) {
-            $this->_httpClient = Yii::createObject(array_merge([
-                'class' => Client::class,
-                'baseUrl' => $this->url,
-            ], $this->httpClientConfig ?: []));
+        if ($this->_httpClient === null) {
+            $this->_httpClient = new Client([
+                'baseUrl' => $this->url
+            ]);
         }
 
         return $this->_httpClient;
-    }
-
-    /**
-     * Создает запрос.
-     *
-     * @param array $config
-     * @return PayPartsRequest
-     * @throws InvalidConfigException
-     */
-    public function createRequest(array $config)
-    {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return Yii::createObject($config, [$this]);
     }
 
     /**
@@ -152,14 +123,13 @@ class PayPartsModule extends Module implements PayParts
      *
      * @param array $config
      * @return PaymentRequest
-     * @throws InvalidConfigException
      */
-    public function createPaymentRequest(array $config = []): PaymentRequest
+    public function paymentRequest(array $config = []) : PaymentRequest
     {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->createRequest(array_merge([
-            'class' => PaymentRequest::class
-        ], $this->paymentRequestConfig ?: [], $config));
+        return new PaymentRequest($this, array_merge([
+            'responseUrl' => Url::to('/' . $this->uniqueId . '/callback', true),
+            'redirectUrl' => Url::to('/', true),
+        ], $this->paymentRequestConfig, $config));
     }
 
     /**
@@ -167,14 +137,10 @@ class PayPartsModule extends Module implements PayParts
      *
      * @param array $config
      * @return ConfirmRequest
-     * @throws InvalidConfigException
      */
-    public function createConfirmRequest(array $config = []): ConfirmRequest
+    public function confirmRequest(array $config = []) : ConfirmRequest
     {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->createRequest(array_merge([
-            'class' => ConfirmRequest::class
-        ], $config));
+        return new ConfirmRequest($this, $config);
     }
 
     /**
@@ -182,14 +148,10 @@ class PayPartsModule extends Module implements PayParts
      *
      * @param array $config
      * @return CancelRequest
-     * @throws InvalidConfigException
      */
-    public function createCancelRequest(array $config = []): CancelRequest
+    public function cancelRequest(array $config = []) : CancelRequest
     {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->createRequest(array_merge([
-            'class' => CancelRequest::class
-        ], $config));
+        return new CancelRequest($this, $config);
     }
 
     /**
@@ -197,14 +159,10 @@ class PayPartsModule extends Module implements PayParts
      *
      * @param array $config
      * @return DeclineRequest
-     * @throws InvalidConfigException
      */
-    public function createDeclineRequest(array $config = []): DeclineRequest
+    public function declineRequest(array $config = []) : DeclineRequest
     {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->createRequest(array_merge([
-            'class' => DeclineRequest::class
-        ], $config));
+        return new DeclineRequest($this, $config);
     }
 
     /**
@@ -212,14 +170,10 @@ class PayPartsModule extends Module implements PayParts
      *
      * @param array $config
      * @return StateRequest
-     * @throws InvalidConfigException
      */
-    public function createStateRequest(array $config = []): StateRequest
+    public function stateRequest(array $config = []) : StateRequest
     {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->createRequest(array_merge([
-            'class' => StateRequest::class
-        ], $config));
+        return new StateRequest($this, $config);
     }
 
     /**
@@ -227,13 +181,9 @@ class PayPartsModule extends Module implements PayParts
      *
      * @param array $config
      * @return QrRequest
-     * @throws InvalidConfigException
      */
-    public function createQrRequest(array $config = []): QrRequest
+    public function qrRequest(array $config = []) : QrRequest
     {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->createRequest(array_merge([
-            'class' => QrRequest::class
-        ], $config));
+        return new QrRequest($this, $config);
     }
 }

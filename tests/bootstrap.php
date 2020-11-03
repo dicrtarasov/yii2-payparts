@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 23.08.20 18:43:16
+ * @version 03.11.20 23:26:23
  */
 
 /** @noinspection PhpUnhandledExceptionInspection */
@@ -20,11 +20,21 @@ require_once(dirname(__DIR__) . '/vendor/yiisoft/yii2/Yii.php');
 
 new yii\console\Application([
     'id' => 'test',
-    'basePath' => __DIR__,
+    'basePath' => dirname(__DIR__),
     'components' => [
-        'cache' => yii\caching\ArrayCache::class,
+        'cache' => [
+            'class' => yii\caching\FileCache::class
+        ],
+        'log' => [
+            'targets' => [
+                'file' => [
+                    'class' => yii\log\FileTarget::class,
+                    'levels' => ['error', 'warning', 'info', 'trace']
+                ]
+            ]
+        ],
         'urlManager' => [
-            'hostInfo' => 'https://github.com'
+            'hostInfo' => 'https://dicr.org'
         ]
     ],
     'modules' => [
@@ -33,5 +43,6 @@ new yii\console\Application([
             'storeId' => dicr\payparts\PayParts::TEST_STORE_ID,
             'password' => dicr\payparts\PayParts::TEST_PASSWORD,
         ]
-    ]
+    ],
+    'bootstrap' => ['log']
 ]);

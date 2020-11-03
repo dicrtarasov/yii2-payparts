@@ -3,18 +3,18 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 24.08.20 01:43:45
+ * @version 03.11.20 23:13:33
  */
 
 declare(strict_types = 1);
 namespace dicr\payparts\request;
 
+use dicr\json\JsonEntity;
 use dicr\payparts\PayParts;
 use dicr\payparts\PayPartsModule;
 use dicr\validate\ValidateException;
 use Yii;
 use yii\base\Exception;
-use yii\base\Model;
 use yii\httpclient\Client;
 
 /**
@@ -22,7 +22,7 @@ use yii\httpclient\Client;
  *
  * @link https://bw.gitbooks.io/api-oc/content/qr_code.html
  */
-class QrRequest extends Model implements PayParts
+class QrRequest extends JsonEntity implements PayParts
 {
     /** @var string токен, полученный при создании платежа */
     public $token;
@@ -34,13 +34,13 @@ class QrRequest extends Model implements PayParts
     public $amount;
 
     /**
-     * @var string тип рассрочки
+     * @var ?string тип рассрочки
      * @see PayParts::MERCHANT_TYPES
      */
     public $type;
 
     /** @var PayPartsModule */
-    private $_module;
+    private $module;
 
     /**
      * QrRequest constructor.
@@ -50,7 +50,7 @@ class QrRequest extends Model implements PayParts
      */
     public function __construct(PayPartsModule $module, $config = [])
     {
-        $this->_module = $module;
+        $this->module = $module;
 
         parent::__construct($config);
     }
@@ -58,7 +58,7 @@ class QrRequest extends Model implements PayParts
     /**
      * @inheritDoc
      */
-    public function rules()
+    public function rules() : array
     {
         // не учитываем parent::orderId
         return [
@@ -69,25 +69,12 @@ class QrRequest extends Model implements PayParts
 
             ['amount', 'required'],
             ['amount', 'number', 'min' => 0.01],
-            ['amount', 'filter', 'filter' => 'floatval'],
+            ['amount', 'filter', 'filter' => static function ($val) : float {
+                return round((float)$val, 2);
+            }],
 
             ['type', 'default'],
             ['type', 'in', 'range' => self::MERCHANT_TYPES]
-        ];
-    }
-
-    /**
-     * Данные для запроса.
-     *
-     * @return array
-     */
-    protected function data(): array
-    {
-        return [
-            'token' => $this->token,
-            'size' => $this->size,
-            'amount' => $this->amount,
-            'type' => $this->type
         ];
     }
 
@@ -96,10 +83,8 @@ class QrRequest extends Model implements PayParts
      *
      * @return string QR-код
      * @throws Exception
-     * @throws ValidateException
-     * @throws \yii\httpclient\Exception
      */
-    public function send(): string
+    public function send() : string
     {
         // валидация полей
         if (! $this->validate()) {
@@ -107,28 +92,29 @@ class QrRequest extends Model implements PayParts
         }
 
         // фильтруем данные
-        $data = array_filter($this->data(), static function ($val) {
+        $data = array_filter($this->getJson(), static function ($val) : bool {
             return $val !== null && $val !== '' && $val !== [];
         });
 
         // запрос
-        $request = $this->_module->httpClient->get(self::QR_URL, $data, [
+        $request = $this->module->httpClient->get(self::QR_URL, $data, [
             'Accept' => 'application/json',
             'Accept-Encoding' => 'UTF-8',
         ]);
 
-        Yii::debug('Запрос на генерацию QR: ' . $request->toString());
-
         // получаем ответ
+        Yii::debug('Запрос: ' . $request->toString(), __METHOD__);
         $response = $request->send();
-        $response->format = Client::FORMAT_JSON;
+        Yii::debug('Ответ: ' . $response->toString(), __METHOD__);
+
         if (! $response->isOk) {
-            throw new Exception('Ошибка запроса: ' . $response->statusCode);
+            throw new Exception('HTTP error: ' . $response->statusCode);
         }
 
+        $response->format = Client::FORMAT_JSON;
+
         // проверяем состояние
-        $state = $response->data['state'] ?? '';
-        if ($state !== self::STATE_SUCCESS) {
+        if (($response->data['state'] ?? '') !== self::STATE_SUCCESS) {
             throw new Exception('Ошибка запроса: ' . ($response->data['message'] ?? $response->content));
         }
 

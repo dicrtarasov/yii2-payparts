@@ -3,17 +3,17 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 23.08.20 20:06:24
+ * @version 03.11.20 23:21:21
  */
 
 declare(strict_types = 1);
 namespace dicr\payparts;
 
+use dicr\json\JsonEntity;
 use RuntimeException;
 use Throwable;
 use Yii;
 use yii\base\Exception;
-use yii\base\Model;
 
 use function base64_encode;
 use function http_build_query;
@@ -28,7 +28,7 @@ use function sha1;
  * @property-read PayPartsModule $module
  * @property-read ?string $paymentUrl URL для переадресации на платеж (в случае наличия token)
  */
-class PayPartsResponse extends Model implements PayParts
+class PayPartsResponse extends JsonEntity implements PayParts
 {
     /**
      * @var ?string результат отработки запроса.
@@ -98,19 +98,19 @@ class PayPartsResponse extends Model implements PayParts
     /**
      * @inheritDoc
      */
-    public function rules()
+    public function rules() : array
     {
         return [
             // state возвращается в ответе на запрос, а paymentState в callback-запросе
             ['state', 'trim'],
             ['state', 'default'],
-            ['state', 'required', 'when' => function () {
+            ['state', 'required', 'when' => function () : bool {
                 return empty($this->paymentState);
             }],
 
             ['paymentState', 'trim'],
             ['paymentState', 'default'],
-            ['paymentState', 'required', 'when' => function () {
+            ['paymentState', 'required', 'when' => function () : bool {
                 return empty($this->state);
             }],
 
@@ -145,7 +145,7 @@ class PayPartsResponse extends Model implements PayParts
      *
      * @return PayPartsModule
      */
-    public function getModule(): PayPartsModule
+    public function getModule() : PayPartsModule
     {
         return $this->_module;
     }
@@ -155,7 +155,7 @@ class PayPartsResponse extends Model implements PayParts
      *
      * @return string
      */
-    private function signature(): string
+    private function signature() : string
     {
         // рассчитываем сигнатуру расчет
         return base64_encode(sha1(
@@ -170,7 +170,7 @@ class PayPartsResponse extends Model implements PayParts
      * @return ?string
      * @link https://bw.gitbooks.io/api-oc/content/redirect.html
      */
-    public function getPaymentUrl(): ?string
+    public function getPaymentUrl() : ?string
     {
         return empty($this->token) ? null : rtrim($this->_module->url, '/') . '/payment?' .
             http_build_query(['token' => $this->token]);
@@ -181,7 +181,7 @@ class PayPartsResponse extends Model implements PayParts
      *
      * @throws Exception
      */
-    public function redirectCheckout(): void
+    public function redirectCheckout() : void
     {
         $url = $this->paymentUrl;
         if (empty($url)) {

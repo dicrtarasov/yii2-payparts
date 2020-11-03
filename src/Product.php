@@ -3,21 +3,20 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 23.08.20 20:34:08
+ * @version 03.11.20 23:35:16
  */
 
 declare(strict_types = 1);
 namespace dicr\payparts;
 
-use yii\base\Model;
+use dicr\json\JsonEntity;
 
 /**
  * Данные товара.
  *
  * @property-read float $sum сумма
- * @property-read array $data данные JSON
  */
-class Product extends Model
+class Product extends JsonEntity
 {
     /** @var string */
     public $name;
@@ -31,7 +30,15 @@ class Product extends Model
     /**
      * @inheritDoc
      */
-    public function rules()
+    public function attributeFields() : array
+    {
+        return [];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function rules() : array
     {
         return [
             ['name', 'trim'],
@@ -44,8 +51,8 @@ class Product extends Model
 
             ['price', 'required'],
             ['price', 'number', 'min' => 0.01],
-            ['price', 'filter', 'filter' => static function ($price) {
-                return (float)sprintf('%.2f', $price);
+            ['price', 'filter', 'filter' => static function ($val) : float {
+                return round((float)$val, 2);
             }]
         ];
     }
@@ -55,22 +62,8 @@ class Product extends Model
      *
      * @return float
      */
-    public function getSum(): float
+    public function getSum() : float
     {
-        return $this->price * $this->count;
-    }
-
-    /**
-     * Данные JSON.
-     *
-     * @return array
-     */
-    public function getData(): array
-    {
-        return [
-            'name' => $this->name,
-            'price' => sprintf('%.2f', $this->price),
-            'count' => $this->count
-        ];
+        return $this->count * round((float)$this->price, 2);
     }
 }

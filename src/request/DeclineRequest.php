@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 24.08.20 01:37:45
+ * @version 03.11.20 23:29:15
  */
 
 declare(strict_types = 1);
@@ -15,6 +15,7 @@ use function array_merge;
 use function base64_encode;
 use function implode;
 use function sha1;
+use function str_replace;
 
 /**
  * Отмена совершенного платежа.
@@ -32,12 +33,14 @@ class DeclineRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    public function rules()
+    public function rules() : array
     {
         return array_merge(parent::rules(), [
             ['amount', 'required'],
             ['amount', 'number', 'min' => 0.01],
-            ['amount', 'filter', 'filter' => 'floatval'],
+            ['amount', 'filter', 'filter' => function ($val) : float {
+                return round((float)$val, 2);
+            }],
 
             ['recipientId', 'trim'],
             ['recipientId', 'default']
@@ -47,7 +50,7 @@ class DeclineRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    protected function url(): string
+    protected function url() : string
     {
         return 'payment/decline';
     }
@@ -55,25 +58,14 @@ class DeclineRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    protected function data(): array
-    {
-        return array_merge(parent::data(), [
-            'amount' => sprintf('%.2f', $this->amount),
-            'recipientId' => $this->recipientId
-        ]);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function signature(): string
+    protected function signature() : string
     {
         return base64_encode(sha1(implode('', [
-            $this->_module->password,
-            $this->_module->storeId,
+            $this->module->password,
+            $this->module->storeId,
             $this->orderId,
-            (int)($this->amount * 100),
-            $this->_module->password
+            str_replace('.', '', sprintf('%.2f', $this->amount)),
+            $this->module->password
         ]), true));
     }
 }

@@ -27,8 +27,6 @@
 ];
 ```
 
-Также можно передать функцию в параметре `callnbackHandle` для обработки запросов от банка со статусами платежей.
-
 ### Пример создания платежа:
 
 ```php
@@ -36,14 +34,14 @@
 $module = Yii::$app->getModule('payparts');
 
 // запрос на создание платежа
-$request = $module->createPaymentRequest([
+$request = $module->paymentRequest([
     'orderId' => $orderId,                        // номер заказа в интернет-магазине
     'merchantType' => PayParts::MERCHANT_TYPE_PP, // сервис "оплата частями"
     'partsCount' => 2,                            // кол-во частей
     'products' => [                               // список товаров
-        new Product(['name' => 'Рулон бумаги', 'price' => 0.01, 'count' => 2]),
-        new Product(['name' => 'Автомобиль', 'price' => 123, 'count' => 1]),
-        new Product(['name' => 'Талоны на Интернет', 'price' => 123.123, 'count' => 3]),
+        ['name' => 'Рулон бумаги', 'price' => 0.01, 'count' => 2],
+        ['name' => 'Автомобиль', 'price' => 123, 'count' => 1],
+        ['name' => 'Талоны на Интернет', 'price' => 123.123, 'count' => 3]
     ]
 ]);
 

@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 24.08.20 01:37:45
+ * @version 03.11.20 23:19:38
  */
 
 declare(strict_types = 1);
@@ -29,7 +29,7 @@ class StateRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    public function rules()
+    public function rules() : array
     {
         return array_merge(parent::rules(), [
             [['showRefund', 'showAmount'], 'default'],
@@ -41,19 +41,19 @@ class StateRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    protected function url(): string
+    public function attributesToJson() : array
     {
-        return 'payment/state';
+        return array_merge(parent::attributesToJson(), [
+            'showRefund' => isset($this->showRefund) ? ($this->showRefund ? 'true' : 'false') : null,
+            'showAmount' => isset($this->showAmount) ? ($this->showAmount ? 'true' : 'false') : null
+        ]);
     }
 
     /**
      * @inheritDoc
      */
-    protected function data(): array
+    protected function url() : string
     {
-        return array_merge(parent::data(), [
-            'showRefund' => isset($this->showRefund) ? ($this->showRefund ? 'true' : 'false') : null,
-            'showAmount' => isset($this->showAmount) ? ($this->showAmount ? 'true' : 'false') : null
-        ]);
+        return 'payment/state';
     }
 }

@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 23.08.20 20:07:17
+ * @version 03.11.20 23:35:59
  */
 
 declare(strict_types = 1);
@@ -11,7 +11,6 @@ namespace dicr\tests;
 
 use dicr\payparts\PayParts;
 use dicr\payparts\PayPartsModule;
-use dicr\payparts\Product;
 use PHPUnit\Framework\TestCase;
 use Yii;
 use yii\base\Exception;
@@ -26,7 +25,7 @@ class PaymentRequestTest extends TestCase
      *
      * @throws Exception
      */
-    public function testSend()
+    public function testSend() : void
     {
         /** @var PayPartsModule $module получаем модуль оплат */
         $module = Yii::$app->getModule('payparts');
@@ -35,14 +34,14 @@ class PaymentRequestTest extends TestCase
         $orderId = (string)time();
 
         // создание платежа
-        $response = ($module->createPaymentRequest([
+        $response = ($module->paymentRequest([
             'orderId' => $orderId,
             'partsCount' => 2,
             'merchantType' => PayParts::MERCHANT_TYPE_PP,
             'products' => [
-                new Product(['name' => 'Рулон бумаги', 'price' => 0.01, 'count' => 2]),
-                new Product(['name' => 'Автомобиль', 'price' => 123, 'count' => 1]),
-                new Product(['name' => 'Талоны на Интернет', 'price' => 123.123, 'count' => 3]),
+                ['name' => 'Рулон бумаги', 'price' => 0.01, 'count' => 2],
+                ['name' => 'Автомобиль', 'price' => 123, 'count' => 1],
+                ['name' => 'Талоны на Интернет', 'price' => 123.123, 'count' => 3]
             ]
         ]))->send();
 
@@ -54,7 +53,7 @@ class PaymentRequestTest extends TestCase
         echo 'Redirect URL: ' . $response->paymentUrl . "\n";
 
         // проверяем состояние платежа
-        $response = ($module->createStateRequest([
+        $response = ($module->stateRequest([
             'orderId' => $orderId
         ]))->send();
 

@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 24.08.20 01:37:45
+ * @version 03.11.20 22:20:20
  */
 
 declare(strict_types = 1);
@@ -29,7 +29,7 @@ class DescriptionRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    public function rules()
+    public function rules() : array
     {
         return array_merge(parent::rules(), [
             ['description', 'trim'],
@@ -40,7 +40,7 @@ class DescriptionRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    protected function url(): string
+    protected function url() : string
     {
         return 'payment/description';
     }
@@ -48,24 +48,14 @@ class DescriptionRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    protected function data(): array
-    {
-        return array_merge(parent::data(), [
-            'description' => $this->description
-        ]);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function signature(): string
+    protected function signature() : string
     {
         return base64_encode(sha1(implode('', [
-            $this->_module->password,
-            $this->_module->storeId,
+            $this->module->password,
+            $this->module->storeId,
             $this->orderId,
             $this->description,
-            $this->_module->password
+            $this->module->password
         ]), true));
     }
 }

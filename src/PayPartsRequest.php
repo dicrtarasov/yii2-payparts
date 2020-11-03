@@ -3,15 +3,16 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 24.08.20 01:40:45
+ * @version 03.11.20 21:54:58
  */
 
 declare(strict_types = 1);
 namespace dicr\payparts;
 
+use dicr\json\JsonEntity;
 use dicr\validate\ValidateException;
+use Yii;
 use yii\base\Exception;
-use yii\base\Model;
 use yii\httpclient\Client;
 
 use function array_filter;
@@ -21,16 +22,14 @@ use function sha1;
 
 /**
  * Базовый класс для запросов.
- *
- * @property-read PayPartsModule $module
  */
-abstract class PayPartsRequest extends Model implements PayParts
+abstract class PayPartsRequest extends JsonEntity implements PayParts
 {
     /** @var string */
     public $orderId;
 
     /** @var PayPartsModule */
-    protected $_module;
+    protected $module;
 
     /**
      * AbstractRequest constructor.
@@ -40,7 +39,7 @@ abstract class PayPartsRequest extends Model implements PayParts
      */
     public function __construct(PayPartsModule $module, array $config = [])
     {
-        $this->_module = $module;
+        $this->module = $module;
 
         parent::__construct($config);
     }
@@ -48,7 +47,15 @@ abstract class PayPartsRequest extends Model implements PayParts
     /**
      * @inheritDoc
      */
-    public function rules()
+    public function attributeFields() : array
+    {
+        return [];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function rules() : array
     {
         return [
             ['orderId', 'trim'],
@@ -58,42 +65,20 @@ abstract class PayPartsRequest extends Model implements PayParts
     }
 
     /**
-     * Возвращает модуль.
-     *
-     * @return PayPartsModule
-     */
-    public function getModule()
-    {
-        return $this->_module;
-    }
-
-    /**
      * URL
      *
      * @return string
      */
-    abstract protected function url(): string;
+    abstract protected function url() : string;
 
     /**
      * Метод HTTP-запроса.
      *
      * @return string
      */
-    protected function method(): string
+    protected function method() : string
     {
         return 'post';
-    }
-
-    /**
-     * Данные для JSON.
-     *
-     * @return array
-     */
-    protected function data(): array
-    {
-        return [
-            'orderId' => $this->orderId
-        ];
     }
 
     /**
@@ -101,13 +86,13 @@ abstract class PayPartsRequest extends Model implements PayParts
      *
      * @return string
      */
-    protected function signature(): string
+    protected function signature() : string
     {
         return base64_encode(sha1(implode('', [
-            $this->_module->password,
-            $this->_module->storeId,
+            $this->module->password,
+            $this->module->storeId,
             $this->orderId,
-            $this->_module->password
+            $this->module->password
         ]), true));
     }
 
@@ -117,7 +102,7 @@ abstract class PayPartsRequest extends Model implements PayParts
      * @return PayPartsResponse
      * @throws Exception
      */
-    public function send(): PayPartsResponse
+    public function send() : PayPartsResponse
     {
         // проверяем поля
         if (! $this->validate()) {
@@ -125,16 +110,15 @@ abstract class PayPartsRequest extends Model implements PayParts
         }
 
         // получаем и фильтруем данные JSON
-        $data = array_filter($this->data(), static function ($val) {
+        $data = array_filter(array_merge($this->getJson(), [
+            'storeId' => $this->module->storeId,
+            'signature' => $this->signature()
+        ]), static function ($val) : bool {
             return $val !== null && $val !== '' && $val !== [];
         });
 
-        // добавляем общие поля
-        $data['storeId'] = $this->_module->storeId;
-        $data['signature'] = $this->signature();
-
         // HTTP POST
-        $request = $this->_module->httpClient->createRequest()
+        $req = $this->module->httpClient->createRequest()
             ->setUrl($this->url())
             ->setMethod($this->method())
             ->setHeaders([
@@ -146,18 +130,23 @@ abstract class PayPartsRequest extends Model implements PayParts
             ->setFormat(Client::FORMAT_JSON);
 
         // отправляем
-        $response = $request->send();
-        $response->format = Client::FORMAT_JSON;
-        if (! $response->isOk) {
-            throw new Exception('Ошибка запроса: ' . $response->statusCode);
+        Yii::debug('Запрос: ' . $req->toString(), __METHOD__);
+        $res = $req->send();
+        Yii::debug('Ответ: ' . $res->toString(), __METHOD__);
+
+        if (! $res->isOk) {
+            throw new Exception('HTTP error: ' . $res->statusCode);
         }
 
         // ответ
-        $payPartsResponse = new PayPartsResponse($this->_module, $response->data);
+        $res->format = Client::FORMAT_JSON;
+        $payPartsResponse = new PayPartsResponse($this->module, [
+            'json' => $res->data
+        ]);
 
         // проверяем ответ
         if (! $payPartsResponse->validate()) {
-            throw new Exception('Некорректный ответ: ' . $response->content . ': ' .
+            throw new Exception('Некорректный ответ: ' . $res->content . ': ' .
                 (new ValidateException($payPartsResponse))->getMessage()
             );
         }

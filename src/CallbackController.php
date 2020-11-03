@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 23.08.20 15:35:13
+ * @version 03.11.20 23:20:22
  */
 
 declare(strict_types = 1);
@@ -31,12 +31,14 @@ class CallbackController extends Controller implements PayParts
      *
      * @throws BadRequestHttpException
      */
-    public function actionIndex()
+    public function actionIndex() : void
     {
-        Yii::debug('Оповещение PayParts: ' . Yii::$app->request->rawBody, __METHOD__);
+        Yii::debug('Callback: ' . Yii::$app->request->rawBody, __METHOD__);
 
         // получаем распарсенные данные JSON
-        $response = new PayPartsResponse($this->module, Yii::$app->request->bodyParams);
+        $response = new PayPartsResponse($this->module, [
+            'json' => Yii::$app->request->bodyParams
+        ]);
 
         // проверяем наличие всех необходимых полей
         if (! $response->validate()) {
