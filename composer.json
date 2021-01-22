@@ -29,13 +29,13 @@
     "minimum-stability": "RC",
     "prefer-stable": true,
     "require": {
-        "php": "~7.3",
+        "php": "~7.4 || ~8.0.1",
         "ext-json": "*",
         "yiisoft/yii2": "~2.0",
         "yiisoft/yii2-httpclient": "~2.0",
 
         "dicr/yii2-json": "~2.0",
-        "dicr/yii2-validate": "~2.2"
+        "dicr/yii2-validate": "~2.3"
     },
     "require-dev": {
         "roave/security-advisories": "dev-master",

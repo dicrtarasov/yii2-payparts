@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 03.11.20 23:29:15
+ * @version 23.01.21 02:45:12
  */
 
 declare(strict_types = 1);
@@ -38,9 +38,7 @@ class DeclineRequest extends PayPartsRequest
         return array_merge(parent::rules(), [
             ['amount', 'required'],
             ['amount', 'number', 'min' => 0.01],
-            ['amount', 'filter', 'filter' => function ($val) : float {
-                return round((float)$val, 2);
-            }],
+            ['amount', 'filter', 'filter' => static fn($val): float => round((float)$val, 2)],
 
             ['recipientId', 'trim'],
             ['recipientId', 'default']

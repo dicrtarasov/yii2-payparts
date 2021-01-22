@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 03.11.20 21:54:58
+ * @version 23.01.21 02:45:12
  */
 
 declare(strict_types = 1);
@@ -113,9 +113,7 @@ abstract class PayPartsRequest extends JsonEntity implements PayParts
         $data = array_filter(array_merge($this->getJson(), [
             'storeId' => $this->module->storeId,
             'signature' => $this->signature()
-        ]), static function ($val) : bool {
-            return $val !== null && $val !== '' && $val !== [];
-        });
+        ]), static fn($val): bool => $val !== null && $val !== '' && $val !== []);
 
         // HTTP POST
         $req = $this->module->httpClient->createRequest()

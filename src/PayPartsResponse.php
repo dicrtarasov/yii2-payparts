@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 03.11.20 23:21:21
+ * @version 23.01.21 02:45:12
  */
 
 declare(strict_types = 1);
@@ -104,19 +104,15 @@ class PayPartsResponse extends JsonEntity implements PayParts
             // state возвращается в ответе на запрос, а paymentState в callback-запросе
             ['state', 'trim'],
             ['state', 'default'],
-            ['state', 'required', 'when' => function () : bool {
-                return empty($this->paymentState);
-            }],
+            ['state', 'required', 'when' => fn(): bool => empty($this->paymentState)],
 
             ['paymentState', 'trim'],
             ['paymentState', 'default'],
-            ['paymentState', 'required', 'when' => function () : bool {
-                return empty($this->state);
-            }],
+            ['paymentState', 'required', 'when' => fn(): bool => empty($this->state)],
 
             ['storeId', 'trim'],
             ['storeId', 'default'],
-            ['storeId', function (string $attribute) {
+            ['storeId', function(string $attribute) {
                 if (! empty($this->storeId) && $this->storeId !== $this->_module->storeId) {
                     $this->addError($attribute, 'Некорректный storeId в ответе: ' . $this->storeId);
                 }

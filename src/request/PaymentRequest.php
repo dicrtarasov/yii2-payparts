@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 03.11.20 23:32:15
+ * @version 23.01.21 02:43:30
  */
 
 declare(strict_types = 1);
@@ -93,7 +93,7 @@ class PaymentRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    public function attributes() : array
+    public function attributes(): array
     {
         return array_merge(parent::attributes(), ['amount']);
     }
@@ -101,7 +101,7 @@ class PaymentRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    public function rules() : array
+    public function rules(): array
     {
         return array_merge(parent::rules(), [
             ['partsCount', 'required'],
@@ -137,7 +137,7 @@ class PaymentRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    public function attributeEntities() : array
+    public function attributeEntities(): array
     {
         return array_merge(parent::attributeEntities(), [
             'products' => [Product::class]
@@ -147,7 +147,7 @@ class PaymentRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    public function attributesToJson() : array
+    public function attributesToJson(): array
     {
         return array_merge(parent::attributesToJson(), [
             'hold' => ''
@@ -162,7 +162,7 @@ class PaymentRequest extends PayPartsRequest
      *
      * @return float
      */
-    public function getAmount() : float
+    public function getAmount(): float
     {
         // не инициализируем _amount, если товары еще не заданы
         if (empty($this->products)) {
@@ -183,7 +183,7 @@ class PaymentRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    protected function url() : string
+    protected function url(): string
     {
         return 'payment/' . ($this->hold ? 'hold' : 'create');
     }
@@ -191,7 +191,7 @@ class PaymentRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    protected function signature() : string
+    protected function signature(): string
     {
         return base64_encode(sha1(implode('', [
             $this->module->password,
@@ -202,10 +202,12 @@ class PaymentRequest extends PayPartsRequest
             $this->merchantType,
             $this->responseUrl,
             $this->redirectUrl,
-            array_reduce($this->products, static function (string $s, Product $prod) : string {
-                return $s . $prod->name . $prod->count .
-                    str_replace('.', '', sprintf('%.2f', $prod->price));
-            }, ''),
+            array_reduce(
+                $this->products,
+                static fn(string $s, Product $prod): string => $s . $prod->name . $prod->count .
+                    str_replace('.', '', sprintf('%.2f', $prod->price)),
+                ''
+            ),
             $this->module->password
         ]), true));
     }
@@ -213,7 +215,7 @@ class PaymentRequest extends PayPartsRequest
     /**
      * @inheritDoc
      */
-    public function send() : PayPartsResponse
+    public function send(): PayPartsResponse
     {
         $response = parent::send();
 

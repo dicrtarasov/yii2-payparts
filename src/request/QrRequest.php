@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 03.11.20 23:13:33
+ * @version 23.01.21 02:44:36
  */
 
 declare(strict_types = 1);
@@ -58,7 +58,7 @@ class QrRequest extends JsonEntity implements PayParts
     /**
      * @inheritDoc
      */
-    public function rules() : array
+    public function rules(): array
     {
         // не учитываем parent::orderId
         return [
@@ -69,9 +69,7 @@ class QrRequest extends JsonEntity implements PayParts
 
             ['amount', 'required'],
             ['amount', 'number', 'min' => 0.01],
-            ['amount', 'filter', 'filter' => static function ($val) : float {
-                return round((float)$val, 2);
-            }],
+            ['amount', 'filter', 'filter' => static fn($val): float => round((float)$val, 2)],
 
             ['type', 'default'],
             ['type', 'in', 'range' => self::MERCHANT_TYPES]
@@ -84,7 +82,7 @@ class QrRequest extends JsonEntity implements PayParts
      * @return string QR-код
      * @throws Exception
      */
-    public function send() : string
+    public function send(): string
     {
         // валидация полей
         if (! $this->validate()) {
@@ -92,9 +90,10 @@ class QrRequest extends JsonEntity implements PayParts
         }
 
         // фильтруем данные
-        $data = array_filter($this->getJson(), static function ($val) : bool {
-            return $val !== null && $val !== '' && $val !== [];
-        });
+        $data = array_filter(
+            $this->getJson(),
+            static fn($val): bool => $val !== null && $val !== '' && $val !== []
+        );
 
         // запрос
         $request = $this->module->httpClient->get(self::QR_URL, $data, [

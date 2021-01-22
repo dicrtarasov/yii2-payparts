@@ -1,9 +1,9 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 03.11.20 23:35:16
+ * @version 23.01.21 02:45:12
  */
 
 declare(strict_types = 1);
@@ -51,9 +51,7 @@ class Product extends JsonEntity
 
             ['price', 'required'],
             ['price', 'number', 'min' => 0.01],
-            ['price', 'filter', 'filter' => static function ($val) : float {
-                return round((float)$val, 2);
-            }]
+            ['price', 'filter', 'filter' => static fn($val): float => round((float)$val, 2)]
         ];
     }
 
